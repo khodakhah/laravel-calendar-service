@@ -2,6 +2,9 @@
 
 This is a CRUD service for managing calendars, events, and working times.
 
+> [!WARNING]
+> This project is still in the development phase and is not ready for production use yet.
+
 ## What to expect
 
 - **Race Condition (Double Bookings)** - Prevent overlapping reservations when multiple requests try to book the same slot at once.
