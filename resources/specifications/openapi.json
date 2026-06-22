@@ -1,0 +1,2286 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Laravel Calendar Service API",
+    "version": "0.1.0",
+    "description": "RESTful API specification for managing calendars, working hours, blocked times, availability, and bookings."
+  },
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+  "servers": [
+    {
+      "url": "/api",
+      "description": "Application API base path"
+    }
+  ],
+  "tags": [
+    {
+      "name": "System",
+      "description": "Operational endpoints."
+    },
+    {
+      "name": "Calendars",
+      "description": "Calendar CRUD endpoints."
+    },
+    {
+      "name": "Working Hours",
+      "description": "Calendar working-hours management."
+    },
+    {
+      "name": "Blocked Times",
+      "description": "Calendar blocked-time management."
+    },
+    {
+      "name": "Availability",
+      "description": "Availability search endpoints."
+    },
+    {
+      "name": "Bookings",
+      "description": "Booking CRUD and search endpoints."
+    },
+    {
+      "name": "Booking Lifecycle",
+      "description": "Status transition history endpoints."
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Check API health",
+        "operationId": "healthCheck",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "API is healthy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calendars": {
+      "get": {
+        "tags": [
+          "Calendars"
+        ],
+        "summary": "List calendars",
+        "operationId": "listCalendars",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PerPage"
+          },
+          {
+            "$ref": "#/components/parameters/IncludeCalendarRelations"
+          },
+          {
+            "$ref": "#/components/parameters/OwnerIdFilter"
+          },
+          {
+            "$ref": "#/components/parameters/CalendarTypeFilter"
+          },
+          {
+            "name": "timezone",
+            "in": "query",
+            "description": "Filter by default calendar timezone.",
+            "schema": {
+              "type": "string",
+              "example": "Europe/Berlin"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Free-text search on the calendar name.",
+            "schema": {
+              "type": "string",
+              "maxLength": 255
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated calendar collection.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarCollectionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Calendars"
+        ],
+        "summary": "Create a calendar",
+        "operationId": "createCalendar",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCalendarRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Calendar created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarResourceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    },
+    "/calendars/{calendarId}": {
+      "get": {
+        "tags": [
+          "Calendars"
+        ],
+        "summary": "Get a calendar",
+        "operationId": "getCalendar",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CalendarId"
+          },
+          {
+            "$ref": "#/components/parameters/IncludeCalendarRelations"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Calendar resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarResourceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Calendars"
+        ],
+        "summary": "Update a calendar",
+        "operationId": "updateCalendar",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CalendarId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCalendarRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Calendar updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarResourceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Calendars"
+        ],
+        "summary": "Delete a calendar",
+        "operationId": "deleteCalendar",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CalendarId"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Calendar deleted."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/calendars/{calendarId}/working-hours": {
+      "get": {
+        "tags": [
+          "Working Hours"
+        ],
+        "summary": "List calendar working hours",
+        "operationId": "listCalendarWorkingHours",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CalendarId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Working-hours collection.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkingHoursCollectionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Working Hours"
+        ],
+        "summary": "Replace calendar working hours",
+        "operationId": "replaceCalendarWorkingHours",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CalendarId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceWorkingHoursRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Working hours replaced.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkingHoursCollectionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    },
+    "/calendars/{calendarId}/blocked-times": {
+      "get": {
+        "tags": [
+          "Blocked Times"
+        ],
+        "summary": "List blocked times",
+        "operationId": "listCalendarBlockedTimes",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CalendarId"
+          },
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PerPage"
+          },
+          {
+            "$ref": "#/components/parameters/StartsFromFilter"
+          },
+          {
+            "$ref": "#/components/parameters/EndsBeforeFilter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Blocked-time collection.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockedTimeCollectionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Blocked Times"
+        ],
+        "summary": "Create a blocked time",
+        "operationId": "createCalendarBlockedTime",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CalendarId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBlockedTimeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Blocked time created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockedTimeResourceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    },
+    "/calendars/{calendarId}/blocked-times/{blockedTimeId}": {
+      "get": {
+        "tags": [
+          "Blocked Times"
+        ],
+        "summary": "Get a blocked time",
+        "operationId": "getCalendarBlockedTime",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CalendarId"
+          },
+          {
+            "$ref": "#/components/parameters/BlockedTimeId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Blocked time resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockedTimeResourceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Blocked Times"
+        ],
+        "summary": "Update a blocked time",
+        "operationId": "updateCalendarBlockedTime",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CalendarId"
+          },
+          {
+            "$ref": "#/components/parameters/BlockedTimeId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBlockedTimeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Blocked time updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockedTimeResourceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Blocked Times"
+        ],
+        "summary": "Delete a blocked time",
+        "operationId": "deleteCalendarBlockedTime",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CalendarId"
+          },
+          {
+            "$ref": "#/components/parameters/BlockedTimeId"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Blocked time deleted."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/calendars/{calendarId}/availability": {
+      "get": {
+        "tags": [
+          "Availability"
+        ],
+        "summary": "Search availability",
+        "operationId": "getCalendarAvailability",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CalendarId"
+          },
+          {
+            "name": "starts_at",
+            "in": "query",
+            "required": true,
+            "description": "Inclusive search window start.",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "ends_at",
+            "in": "query",
+            "required": true,
+            "description": "Exclusive search window end.",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "duration_minutes",
+            "in": "query",
+            "required": true,
+            "description": "Required slot duration.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 60
+            }
+          },
+          {
+            "name": "slot_interval_minutes",
+            "in": "query",
+            "description": "Step size used while generating candidate slots.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 15,
+              "example": 15
+            }
+          },
+          {
+            "name": "timezone",
+            "in": "query",
+            "description": "Timezone used to render returned slots. Defaults to the calendar timezone.",
+            "schema": {
+              "type": "string",
+              "example": "Europe/Berlin"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Available slots.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvailabilityResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    },
+    "/bookings": {
+      "get": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Search bookings across calendars",
+        "operationId": "listBookings",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PerPage"
+          },
+          {
+            "$ref": "#/components/parameters/IncludeBookingRelations"
+          },
+          {
+            "name": "calendar_id",
+            "in": "query",
+            "description": "Filter by calendar identifier.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/BookingStatusFilter"
+          },
+          {
+            "$ref": "#/components/parameters/BookingTypeFilter"
+          },
+          {
+            "$ref": "#/components/parameters/StartsFromFilter"
+          },
+          {
+            "$ref": "#/components/parameters/EndsBeforeFilter"
+          },
+          {
+            "name": "assignee_id",
+            "in": "query",
+            "description": "Filter bookings assigned to a given user.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "created_by",
+            "in": "query",
+            "description": "Filter bookings created by a given user.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "updated_by",
+            "in": "query",
+            "description": "Filter bookings last updated by a given user.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "metadata",
+            "in": "query",
+            "description": "Filter by additional metadata properties using deepObject syntax, for example metadata[priority]=high.",
+            "style": "deepObject",
+            "explode": true,
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Free-text search on booking number, title, or description.",
+            "schema": {
+              "type": "string",
+              "maxLength": 255
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated booking collection.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingCollectionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Create a booking",
+        "operationId": "createBooking",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBookingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Booking created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingResourceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    },
+    "/bookings/{bookingId}": {
+      "get": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Get a booking",
+        "operationId": "getBooking",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/BookingId"
+          },
+          {
+            "$ref": "#/components/parameters/IncludeBookingRelations"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Booking resource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingResourceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Update a booking",
+        "operationId": "updateBooking",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/BookingId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBookingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Booking updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingResourceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Delete a booking",
+        "operationId": "deleteBooking",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/BookingId"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Booking deleted."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/bookings/{bookingId}/lifecycle": {
+      "get": {
+        "tags": [
+          "Booking Lifecycle"
+        ],
+        "summary": "List booking lifecycle entries",
+        "operationId": "listBookingLifecycleEntries",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/BookingId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Booking lifecycle history.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingLifecycleCollectionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Booking Lifecycle"
+        ],
+        "summary": "Append a booking lifecycle entry",
+        "operationId": "createBookingLifecycleEntry",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/BookingId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBookingLifecycleEntryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Lifecycle entry created and booking status updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingLifecycleEntryResourceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "parameters": {
+      "CalendarId": {
+        "name": "calendarId",
+        "in": "path",
+        "required": true,
+        "description": "Calendar identifier.",
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "BookingId": {
+        "name": "bookingId",
+        "in": "path",
+        "required": true,
+        "description": "Booking identifier.",
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "BlockedTimeId": {
+        "name": "blockedTimeId",
+        "in": "path",
+        "required": true,
+        "description": "Blocked-time identifier.",
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "description": "Page number.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      "PerPage": {
+        "name": "per_page",
+        "in": "query",
+        "description": "Items per page.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 25
+        }
+      },
+      "OwnerIdFilter": {
+        "name": "owner_id",
+        "in": "query",
+        "description": "Filter by calendar owner.",
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "CalendarTypeFilter": {
+        "name": "type",
+        "in": "query",
+        "description": "Filter by calendar type.",
+        "schema": {
+          "$ref": "#/components/schemas/CalendarType"
+        }
+      },
+      "BookingStatusFilter": {
+        "name": "status",
+        "in": "query",
+        "description": "Filter by booking status.",
+        "schema": {
+          "$ref": "#/components/schemas/BookingStatus"
+        }
+      },
+      "BookingTypeFilter": {
+        "name": "type",
+        "in": "query",
+        "description": "Filter by booking type.",
+        "schema": {
+          "$ref": "#/components/schemas/BookingType"
+        }
+      },
+      "StartsFromFilter": {
+        "name": "starts_from",
+        "in": "query",
+        "description": "Return records with start timestamps on or after this value.",
+        "schema": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "EndsBeforeFilter": {
+        "name": "ends_before",
+        "in": "query",
+        "description": "Return records with end timestamps before or equal to this value.",
+        "schema": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "IncludeCalendarRelations": {
+        "name": "include",
+        "in": "query",
+        "description": "Comma-separated related data to embed. Supported values: working_hours, blocked_times.",
+        "schema": {
+          "type": "string",
+          "example": "working_hours,blocked_times"
+        }
+      },
+      "IncludeBookingRelations": {
+        "name": "include",
+        "in": "query",
+        "description": "Comma-separated related data to embed. Supported values: assignees, sources, lifecycle.",
+        "schema": {
+          "type": "string",
+          "example": "assignees,sources,lifecycle"
+        }
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Authentication is required or has failed.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "The requested resource was not found.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "The request conflicts with the current resource state, typically due to overlapping bookings.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "ValidationError": {
+        "description": "The request payload failed validation.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ValidationErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "ok"
+          }
+        }
+      },
+      "PaginationMeta": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "current_page",
+          "per_page",
+          "total"
+        ],
+        "properties": {
+          "current_page": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          },
+          "per_page": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 25
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 128
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "The requested resource was not found."
+          }
+        }
+      },
+      "ValidationErrorResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "message",
+          "errors"
+        ],
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "The given data was invalid."
+          },
+          "errors": {
+            "type": "object",
+            "description": "Validation errors grouped by field path.",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "example": {
+              "ends_at": [
+                "The ends_at field must be a date after starts_at."
+              ]
+            }
+          }
+        }
+      },
+      "CalendarType": {
+        "type": "string",
+        "enum": [
+          "work",
+          "personal",
+          "resource_booking",
+          "shared",
+          "availability",
+          "external_sync"
+        ],
+        "example": "work"
+      },
+      "BookingStatus": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "pending",
+          "tentative",
+          "approved",
+          "confirmed",
+          "processing",
+          "processed",
+          "completed",
+          "cancelled",
+          "rejected",
+          "no_show",
+          "expired",
+          "deleted",
+          "archived"
+        ],
+        "example": "approved"
+      },
+      "BookingType": {
+        "type": "string",
+        "enum": [
+          "single",
+          "recurring_master",
+          "recurring_instance",
+          "recurring_exception",
+          "hold",
+          "availability_block",
+          "external_sync"
+        ],
+        "example": "single"
+      },
+      "DayOfWeek": {
+        "type": "string",
+        "enum": [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday"
+        ],
+        "example": "monday"
+      },
+      "UserReference": {
+        "type": "object",
+        "description": "Normalized user reference with a resource kind and UUID identifier.",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "id"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "Resource kind of the user reference.",
+            "maxLength": 100,
+            "example": "user"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Primary key of the related user.",
+            "example": "d2f5cd63-f5e9-4d57-b733-37ea6ce0d6c6"
+          }
+        }
+      },
+      "SourceReference": {
+        "type": "object",
+        "description": "External or cross-system source reference linked to the booking.",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "provider",
+          "id"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "Source kind, such as google_calendar_event, microsoft_graph_event, imported_csv_row, or crm_booking.",
+            "maxLength": 100,
+            "example": "google_calendar_event"
+          },
+          "provider": {
+            "type": "string",
+            "description": "Name of the upstream provider or source system.",
+            "maxLength": 100,
+            "example": "google"
+          },
+          "id": {
+            "type": "string",
+            "description": "Stable identifier from the upstream provider.",
+            "maxLength": 255,
+            "example": "8l2m4a3d2@example.com"
+          },
+          "synced_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of the most recent successful sync for this source reference.",
+            "example": "2026-06-27T18:45:00+02:00"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Optional provider-specific attributes related to the source reference.",
+            "additionalProperties": true,
+            "example": {
+              "calendar_name": "Engineering",
+              "import_batch": "batch-42"
+            }
+          }
+        }
+      },
+      "Location": {
+        "type": "object",
+        "description": "Optional physical or virtual location attached to the booking.",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Location classification.",
+            "enum": [
+              "in_person",
+              "virtual",
+              "hybrid"
+            ],
+            "example": "hybrid"
+          },
+          "label": {
+            "type": "string",
+            "description": "Short display label for the location.",
+            "maxLength": 255,
+            "example": "Berlin HQ / Zoom"
+          },
+          "address": {
+            "type": "string",
+            "description": "Postal address or room details for in-person events.",
+            "example": "Room 3.14, Berlin HQ, Friedrichstrasse 10"
+          },
+          "meeting_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Join URL for a virtual meeting.",
+            "example": "https://meet.example.com/booking/q3-planning"
+          }
+        }
+      },
+      "Recurrence": {
+        "type": "object",
+        "description": "Recurrence rules used when the booking belongs to a repeating series.",
+        "additionalProperties": false,
+        "required": [
+          "frequency",
+          "interval"
+        ],
+        "properties": {
+          "frequency": {
+            "type": "string",
+            "description": "Base recurrence cadence.",
+            "enum": [
+              "daily",
+              "weekly",
+              "monthly",
+              "yearly"
+            ],
+            "example": "weekly"
+          },
+          "interval": {
+            "type": "integer",
+            "description": "Number of frequency units between each occurrence.",
+            "minimum": 1,
+            "example": 1
+          },
+          "count": {
+            "type": "integer",
+            "description": "Optional maximum number of generated occurrences.",
+            "minimum": 1,
+            "example": 12
+          },
+          "until": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Optional end boundary for the recurring series.",
+            "example": "2026-09-30T23:59:59+02:00"
+          },
+          "by_week_days": {
+            "type": "array",
+            "description": "Days of the week used for weekly recurrence patterns.",
+            "items": {
+              "$ref": "#/components/schemas/DayOfWeek"
+            },
+            "example": [
+              "monday",
+              "wednesday"
+            ]
+          }
+        }
+      },
+      "BookingLifecycleEntry": {
+        "type": "object",
+        "description": "A single status transition recorded in the booking lifecycle.",
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "changed_at",
+          "actor"
+        ],
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/BookingStatus"
+          },
+          "changed_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the status transition occurred.",
+            "example": "2026-06-27T18:00:00+02:00"
+          },
+          "actor": {
+            "$ref": "#/components/schemas/UserReference"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Optional explanation for the status transition.",
+            "maxLength": 500,
+            "example": "Approved after checking room capacity."
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Optional machine-friendly context for the transition.",
+            "additionalProperties": true,
+            "example": {
+              "approval_channel": "admin_panel"
+            }
+          }
+        }
+      },
+      "WorkingHoursRule": {
+        "type": "object",
+        "description": "Default weekly working-hours rule for a calendar.",
+        "additionalProperties": false,
+        "required": [
+          "day_of_week",
+          "start_time",
+          "end_time"
+        ],
+        "properties": {
+          "day_of_week": {
+            "$ref": "#/components/schemas/DayOfWeek"
+          },
+          "start_time": {
+            "type": "string",
+            "description": "Daily start time in 24-hour HH:MM format.",
+            "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+            "example": "09:00"
+          },
+          "end_time": {
+            "type": "string",
+            "description": "Daily end time in 24-hour HH:MM format.",
+            "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+            "example": "17:00"
+          }
+        }
+      },
+      "BlockedTime": {
+        "type": "object",
+        "description": "Special blocked period that overrides normal availability.",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "starts_at",
+          "ends_at",
+          "reason"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Primary key of the blocked-time record.",
+            "example": "ab4a2df0-fb62-4bd6-90cc-3a5db2f2b214"
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Start of the blocked period in ISO 8601 format.",
+            "example": "2026-07-01T00:00:00+02:00"
+          },
+          "ends_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "End of the blocked period in ISO 8601 format.",
+            "example": "2026-07-10T23:59:59+02:00"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Human-readable explanation for the blocked period.",
+            "maxLength": 255,
+            "example": "vacation"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Optional extra context for the blocked period.",
+            "example": "Office closed for annual summer break."
+          }
+        }
+      },
+      "BlockedTimeWrite": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "starts_at",
+          "ends_at",
+          "reason"
+        ],
+        "properties": {
+          "starts_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ends_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "Calendar": {
+        "type": "object",
+        "description": "A calendar resource used to group events, availability, and scheduling context.",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "owner_id",
+          "type",
+          "timezone"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Primary key of the calendar.",
+            "example": "6c6b8f0a-6cf6-4db4-9f86-3a2f51571310"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable calendar name.",
+            "maxLength": 255,
+            "example": "Engineering Team Calendar"
+          },
+          "owner_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "External owner reference stored as a UUID.",
+            "example": "f7a8dbec-6201-4f06-a383-2a7f8ee6dd45"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CalendarType"
+          },
+          "timezone": {
+            "type": "string",
+            "description": "Default IANA timezone context for this calendar.",
+            "example": "Europe/Berlin"
+          },
+          "working_hours": {
+            "type": "array",
+            "description": "Default weekly working hours for this calendar, interpreted in the calendar timezone.",
+            "items": {
+              "$ref": "#/components/schemas/WorkingHoursRule"
+            }
+          },
+          "blocked_times": {
+            "type": "array",
+            "description": "Special blocked periods that override normal availability.",
+            "items": {
+              "$ref": "#/components/schemas/BlockedTime"
+            }
+          }
+        }
+      },
+      "CreateCalendarRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "owner_id",
+          "type",
+          "timezone"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "example": "Engineering Team Calendar"
+          },
+          "owner_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "f7a8dbec-6201-4f06-a383-2a7f8ee6dd45"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CalendarType"
+          },
+          "timezone": {
+            "type": "string",
+            "example": "Europe/Berlin"
+          },
+          "working_hours": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkingHoursRule"
+            }
+          }
+        }
+      },
+      "UpdateCalendarRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "owner_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CalendarType"
+          },
+          "timezone": {
+            "type": "string"
+          }
+        }
+      },
+      "ReplaceWorkingHoursRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "working_hours"
+        ],
+        "properties": {
+          "working_hours": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkingHoursRule"
+            }
+          }
+        }
+      },
+      "CreateBlockedTimeRequest": {
+        "$ref": "#/components/schemas/BlockedTimeWrite"
+      },
+      "UpdateBlockedTimeRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "starts_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ends_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "Booking": {
+        "type": "object",
+        "description": "A booking resource that represents a scheduled record on a calendar, including lifecycle state, recurrence context, ownership, and operational metadata.",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "calendar_id",
+          "sources",
+          "title",
+          "status",
+          "type",
+          "timezone",
+          "starts_at",
+          "ends_at",
+          "created_at",
+          "created_by",
+          "lifecycle"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Primary key of the booking.",
+            "example": "1b6c0d93-cfd7-4126-9cc2-b3c9394eb6d8"
+          },
+          "calendar_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Primary key of the calendar that owns this booking.",
+            "example": "6c6b8f0a-6cf6-4db4-9f86-3a2f51571310"
+          },
+          "sources": {
+            "type": "array",
+            "description": "Upstream or cross-system source references connected to this booking.",
+            "items": {
+              "$ref": "#/components/schemas/SourceReference"
+            },
+            "default": []
+          },
+          "parent_booking_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Optional parent booking identifier when this record is derived from another booking.",
+            "example": "0ba4cfe0-6acb-4d33-8e47-a31264d43d0d"
+          },
+          "series_master_booking_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Optional master-series booking identifier for recurring instances or exceptions.",
+            "example": "314e0b0d-b0d7-4ae7-8808-d6b721ae2b3d"
+          },
+          "booking_number": {
+            "type": "string",
+            "description": "Human-friendly booking reference for support, invoices, or operator workflows.",
+            "maxLength": 100,
+            "example": "BK-2026-000245"
+          },
+          "title": {
+            "type": "string",
+            "description": "Short human-readable title of the booking.",
+            "maxLength": 255,
+            "example": "Quarterly planning session"
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional long-form notes or business context for the booking.",
+            "example": "Planning session for Q3 roadmap with engineering and product leads."
+          },
+          "status": {
+            "$ref": "#/components/schemas/BookingStatus"
+          },
+          "status_reason": {
+            "type": "string",
+            "description": "Optional human-readable explanation for the current status.",
+            "maxLength": 500,
+            "example": "Approved by the scheduling team after availability review."
+          },
+          "type": {
+            "$ref": "#/components/schemas/BookingType"
+          },
+          "timezone": {
+            "type": "string",
+            "description": "IANA timezone used to interpret the booking schedule.",
+            "example": "Europe/Berlin"
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Inclusive start timestamp of the booking in ISO 8601 format.",
+            "example": "2026-07-03T09:00:00+02:00"
+          },
+          "ends_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Exclusive end timestamp of the booking in ISO 8601 format.",
+            "example": "2026-07-03T10:30:00+02:00"
+          },
+          "all_day": {
+            "type": "boolean",
+            "description": "Whether the booking spans the full local calendar day rather than a time range.",
+            "default": false,
+            "example": false
+          },
+          "duration_minutes": {
+            "type": "integer",
+            "description": "Total booked duration in minutes for faster filtering and reporting.",
+            "minimum": 1,
+            "example": 90
+          },
+          "buffer_before_minutes": {
+            "type": "integer",
+            "description": "Optional preparation time reserved immediately before the booking.",
+            "minimum": 0,
+            "example": 15
+          },
+          "buffer_after_minutes": {
+            "type": "integer",
+            "description": "Optional wrap-up time reserved immediately after the booking.",
+            "minimum": 0,
+            "example": 15
+          },
+          "assignees": {
+            "type": "array",
+            "description": "Users responsible for owning or operating the booking.",
+            "items": {
+              "$ref": "#/components/schemas/UserReference"
+            }
+          },
+          "created_by": {
+            "$ref": "#/components/schemas/UserReference"
+          },
+          "updated_by": {
+            "$ref": "#/components/schemas/UserReference"
+          },
+          "location": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "recurrence": {
+            "$ref": "#/components/schemas/Recurrence"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the booking was created.",
+            "example": "2026-06-27T17:32:11+02:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the booking was last updated.",
+            "example": "2026-06-27T18:10:02+02:00"
+          },
+          "lifecycle": {
+            "type": "array",
+            "description": "Audit-style status transition history for the booking.",
+            "items": {
+              "$ref": "#/components/schemas/BookingLifecycleEntry"
+            }
+          },
+          "notes": {
+            "type": "string",
+            "description": "Internal operational notes that should not necessarily be displayed to end users.",
+            "example": "Room access code will be shared 15 minutes before the booking starts."
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Flexible extension point for provider-specific or domain-specific attributes.",
+            "additionalProperties": true,
+            "example": {
+              "priority": "high",
+              "department": "engineering",
+              "requires_projector": true
+            }
+          }
+        }
+      },
+      "CreateBookingRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "calendar_id",
+          "title",
+          "timezone",
+          "starts_at",
+          "ends_at"
+        ],
+        "properties": {
+          "calendar_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SourceReference"
+            },
+            "default": []
+          },
+          "parent_booking_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "series_master_booking_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "booking_number": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BookingStatus"
+          },
+          "status_reason": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "type": {
+            "$ref": "#/components/schemas/BookingType"
+          },
+          "timezone": {
+            "type": "string",
+            "example": "Europe/Berlin"
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ends_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "all_day": {
+            "type": "boolean",
+            "default": false
+          },
+          "buffer_before_minutes": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0
+          },
+          "buffer_after_minutes": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0
+          },
+          "assignees": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserReference"
+            }
+          },
+          "location": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "recurrence": {
+            "$ref": "#/components/schemas/Recurrence"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "UpdateBookingRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SourceReference"
+            }
+          },
+          "parent_booking_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "series_master_booking_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "booking_number": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BookingStatus"
+          },
+          "status_reason": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "type": {
+            "$ref": "#/components/schemas/BookingType"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ends_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "all_day": {
+            "type": "boolean"
+          },
+          "buffer_before_minutes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "buffer_after_minutes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "assignees": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserReference"
+            }
+          },
+          "location": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "recurrence": {
+            "$ref": "#/components/schemas/Recurrence"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "CreateBookingLifecycleEntryRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/BookingStatus"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "AvailabilitySlot": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "starts_at",
+          "ends_at",
+          "duration_minutes"
+        ],
+        "properties": {
+          "starts_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-07-03T09:00:00+02:00"
+          },
+          "ends_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-07-03T10:00:00+02:00"
+          },
+          "duration_minutes": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 60
+          }
+        }
+      },
+      "AvailabilityResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AvailabilitySlot"
+            }
+          },
+          "meta": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "calendar_id",
+              "timezone",
+              "starts_at",
+              "ends_at",
+              "duration_minutes",
+              "slot_interval_minutes"
+            ],
+            "properties": {
+              "calendar_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "timezone": {
+                "type": "string",
+                "example": "Europe/Berlin"
+              },
+              "starts_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "ends_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "duration_minutes": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "slot_interval_minutes": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        }
+      },
+      "CalendarCollectionResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Calendar"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        }
+      },
+      "CalendarResourceResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Calendar"
+          }
+        }
+      },
+      "WorkingHoursCollectionResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkingHoursRule"
+            }
+          }
+        }
+      },
+      "BlockedTimeCollectionResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BlockedTime"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        }
+      },
+      "BlockedTimeResourceResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/BlockedTime"
+          }
+        }
+      },
+      "BookingCollectionResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Booking"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        }
+      },
+      "BookingResourceResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Booking"
+          }
+        }
+      },
+      "BookingLifecycleCollectionResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BookingLifecycleEntry"
+            }
+          }
+        }
+      },
+      "BookingLifecycleEntryResourceResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/BookingLifecycleEntry"
+          }
+        }
+      }
+    }
+  }
+}
