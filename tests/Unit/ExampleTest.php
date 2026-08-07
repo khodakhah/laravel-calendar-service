@@ -1,5 +1,7 @@
 <?php
 
-test('that true is true', function () {
-    expect(true)->toBeTrue();
+test('it converts a calendar name to uppercase', function () {
+    $calendarName = str('calendar')->upper()->toString();
+
+    expect($calendarName)->toBe('CALENDAR');
 });

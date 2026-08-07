@@ -30,3 +30,8 @@ smallest applicable suite to keep the feedback loop fast and the test's intent c
 
 All suites use Pest. Integration and Feature tests boot the Laravel application; only
 Feature tests should exercise the database.
+
+## Code Quality
+
+Run the style check with `composer lint` and Laravel-aware static analysis with
+`composer analyse`.
