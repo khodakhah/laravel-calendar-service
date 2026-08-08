@@ -5,11 +5,10 @@
     "version": "0.1.0",
     "description": "RESTful API specification for managing calendars, working hours, blocked times, availability, and bookings."
   },
-  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
   "servers": [
     {
-      "url": "/api",
-      "description": "Application API base path"
+      "url": "http://localhost/api",
+      "description": "Local Sail API base path"
     }
   ],
   "tags": [
@@ -20,10 +19,6 @@
     {
       "name": "Calendars",
       "description": "Calendar CRUD endpoints."
-    },
-    {
-      "name": "Working Hours",
-      "description": "Calendar working-hours management."
     },
     {
       "name": "Blocked Times",
@@ -140,6 +135,24 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateCalendarRequest"
+              },
+              "example": {
+                "name": "Engineering Team Calendar",
+                "owner_id": "f7a8dbec-6201-4f06-a383-2a7f8ee6dd45",
+                "type": "work",
+                "timezone": "Europe/Berlin",
+                "working_hours": [
+                  {
+                    "day_of_week": "monday",
+                    "start_time": "09:00",
+                    "end_time": "17:00"
+                  },
+                  {
+                    "day_of_week": "tuesday",
+                    "start_time": "09:00",
+                    "end_time": "17:00"
+                  }
+                ]
               }
             }
           }
@@ -202,7 +215,7 @@
         "tags": [
           "Calendars"
         ],
-        "summary": "Update a calendar",
+        "summary": "Replace a calendar",
         "operationId": "updateCalendar",
         "parameters": [
           {
@@ -215,6 +228,19 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateCalendarRequest"
+              },
+              "example": {
+                "name": "Engineering Team Calendar - Updated",
+                "owner_id": "f7a8dbec-6201-4f06-a383-2a7f8ee6dd45",
+                "type": "work",
+                "timezone": "Europe/Berlin",
+                "working_hours": [
+                  {
+                    "day_of_week": "monday",
+                    "start_time": "09:00",
+                    "end_time": "17:00"
+                  }
+                ]
               }
             }
           }
@@ -261,81 +287,6 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
-          }
-        }
-      }
-    },
-    "/calendars/{calendarId}/working-hours": {
-      "get": {
-        "tags": [
-          "Working Hours"
-        ],
-        "summary": "List calendar working hours",
-        "operationId": "listCalendarWorkingHours",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/CalendarId"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Working-hours collection.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WorkingHoursCollectionResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "Working Hours"
-        ],
-        "summary": "Replace calendar working hours",
-        "operationId": "replaceCalendarWorkingHours",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/CalendarId"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ReplaceWorkingHoursRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Working hours replaced.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WorkingHoursCollectionResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
           }
         }
       }
@@ -400,6 +351,12 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateBlockedTimeRequest"
+              },
+              "example": {
+                "starts_at": "2026-07-01T00:00:00+02:00",
+                "ends_at": "2026-07-10T23:59:59+02:00",
+                "reason": "vacation",
+                "notes": "Office closed for annual summer break."
               }
             }
           }
@@ -465,7 +422,7 @@
         "tags": [
           "Blocked Times"
         ],
-        "summary": "Update a blocked time",
+        "summary": "Replace a blocked time",
         "operationId": "updateCalendarBlockedTime",
         "parameters": [
           {
@@ -481,6 +438,12 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateBlockedTimeRequest"
+              },
+              "example": {
+                "starts_at": "2026-08-10T10:00:00+02:00",
+                "ends_at": "2026-08-10T11:00:00+02:00",
+                "reason": "Maintenance",
+                "notes": "Room unavailable."
               }
             }
           }
@@ -1634,6 +1597,12 @@
       "UpdateCalendarRequest": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "name",
+          "owner_id",
+          "type",
+          "timezone"
+        ],
         "properties": {
           "name": {
             "type": "string",
@@ -1648,20 +1617,19 @@
           },
           "timezone": {
             "type": "string"
-          }
-        }
-      },
-      "ReplaceWorkingHoursRequest": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "working_hours"
-        ],
-        "properties": {
+          },
           "working_hours": {
             "type": "array",
+            "description": "Weekly working hours to replace. Omit to remove all existing working hours.",
             "items": {
               "$ref": "#/components/schemas/WorkingHoursRule"
+            }
+          },
+          "blocked_times": {
+            "type": "array",
+            "description": "Blocked times to replace. Omit to preserve existing blocked times.",
+            "items": {
+              "$ref": "#/components/schemas/BlockedTimeWrite"
             }
           }
         }
@@ -1672,6 +1640,11 @@
       "UpdateBlockedTimeRequest": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "starts_at",
+          "ends_at",
+          "reason"
+        ],
         "properties": {
           "starts_at": {
             "type": "string",
@@ -1686,7 +1659,11 @@
             "maxLength": 255
           },
           "notes": {
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional extra context. Omit this property to remove existing notes."
           }
         }
       },
@@ -2174,21 +2151,6 @@
         "properties": {
           "data": {
             "$ref": "#/components/schemas/Calendar"
-          }
-        }
-      },
-      "WorkingHoursCollectionResponse": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "data"
-        ],
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/WorkingHoursRule"
-            }
           }
         }
       },
