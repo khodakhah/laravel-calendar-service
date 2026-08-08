@@ -17,6 +17,31 @@ This is a CRUD service for managing calendars, events, and working times.
 The primary goal is to save the time of other devs for calendar-related applications without investing a lot of time in calendar principles.
 It should be easy to install (especially with Docker) so that anyone can install and evaluate it in a few minutes.
 
+## Local Development
+
+Install dependencies and create your local environment file:
+
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+```
+
+Start the Docker services and Laravel development server:
+
+```bash
+composer start
+```
+
+This starts Sail in the background and starts the Laravel development server.
+Press `Ctrl+C` to stop the development server; Sail continues running in the background.
+
+Run the test suite with the Docker PostgreSQL `testing` database:
+
+```bash
+composer test
+```
+
 ## Testing
 
 Tests are organized by the scope and dependencies they exercise. Put each test in the
