@@ -25,6 +25,10 @@ class GenerateAvailabilitySlots
             ->where('starts_at', '<', $endsAt->utc())
             ->where('ends_at', '>', $startsAt->utc())
             ->get();
+        $blockingEvents = $calendar->events()
+            ->blocksAvailability()
+            ->overlapping($startsAt->utc(), $endsAt->utc())
+            ->get(['starts_at', 'ends_at']);
         $slots = [];
 
         for ($date = $startsAt->startOfDay(); $date->lessThanOrEqualTo($endsAt->startOfDay()); $date = $date->addDay()) {
@@ -45,8 +49,12 @@ class GenerateAvailabilitySlots
                     fn ($blockedTime): bool => $blockedTime->starts_at->lessThan($slotEndsAt)
                         && $blockedTime->ends_at->greaterThan($slotStartsAt),
                 );
+                $overlapsBlockingEvent = $blockingEvents->contains(
+                    fn ($event): bool => $event->starts_at->lessThan($slotEndsAt)
+                        && $event->ends_at->greaterThan($slotStartsAt),
+                );
 
-                if (! $overlapsBlockedTime) {
+                if (! $overlapsBlockedTime && ! $overlapsBlockingEvent) {
                     $slots[] = [
                         'starts_at' => $slotStartsAt->toIso8601String(),
                         'ends_at' => $slotEndsAt->toIso8601String(),

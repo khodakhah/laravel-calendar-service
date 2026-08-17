@@ -3,7 +3,7 @@
   "info": {
     "title": "Laravel Calendar Service API",
     "version": "0.1.0",
-    "description": "RESTful API specification for managing calendars, working hours, blocked times, availability, and bookings."
+    "description": "RESTful API specification for managing calendars, working hours, blocked times, availability, and events."
   },
   "servers": [
     {
@@ -29,12 +29,8 @@
       "description": "Availability search endpoints."
     },
     {
-      "name": "Bookings",
-      "description": "Booking CRUD and search endpoints."
-    },
-    {
-      "name": "Booking Lifecycle",
-      "description": "Status transition history endpoints."
+      "name": "Events",
+      "description": "Event CRUD and search endpoints."
     }
   ],
   "security": [
@@ -583,13 +579,13 @@
         }
       }
     },
-    "/bookings": {
+    "/events": {
       "get": {
         "tags": [
-          "Bookings"
+          "Events"
         ],
-        "summary": "Search bookings across calendars",
-        "operationId": "listBookings",
+        "summary": "Search events across calendars",
+        "operationId": "listEvents",
         "parameters": [
           {
             "$ref": "#/components/parameters/Page"
@@ -598,7 +594,7 @@
             "$ref": "#/components/parameters/PerPage"
           },
           {
-            "$ref": "#/components/parameters/IncludeBookingRelations"
+            "$ref": "#/components/parameters/IncludeEventRelations"
           },
           {
             "name": "calendar_id",
@@ -610,10 +606,10 @@
             }
           },
           {
-            "$ref": "#/components/parameters/BookingStatusFilter"
+            "$ref": "#/components/parameters/EventStatusFilter"
           },
           {
-            "$ref": "#/components/parameters/BookingTypeFilter"
+            "$ref": "#/components/parameters/EventTypeFilter"
           },
           {
             "$ref": "#/components/parameters/StartsFromFilter"
@@ -624,7 +620,7 @@
           {
             "name": "assignee_id",
             "in": "query",
-            "description": "Filter bookings assigned to a given user.",
+            "description": "Filter events assigned to a given user.",
             "schema": {
               "type": "string",
               "format": "uuid"
@@ -633,7 +629,7 @@
           {
             "name": "created_by",
             "in": "query",
-            "description": "Filter bookings created by a given user.",
+            "description": "Filter events created by a given user.",
             "schema": {
               "type": "string",
               "format": "uuid"
@@ -642,7 +638,7 @@
           {
             "name": "updated_by",
             "in": "query",
-            "description": "Filter bookings last updated by a given user.",
+            "description": "Filter events last updated by a given user.",
             "schema": {
               "type": "string",
               "format": "uuid"
@@ -662,7 +658,7 @@
           {
             "name": "search",
             "in": "query",
-            "description": "Free-text search on booking number, title, or description.",
+            "description": "Free-text search on event number, title, or description.",
             "schema": {
               "type": "string",
               "maxLength": 255
@@ -671,11 +667,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Paginated booking collection.",
+            "description": "Paginated event collection.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BookingCollectionResponse"
+                  "$ref": "#/components/schemas/EventCollectionResponse"
                 }
               }
             }
@@ -687,27 +683,27 @@
       },
       "post": {
         "tags": [
-          "Bookings"
+          "Events"
         ],
-        "summary": "Create a booking",
-        "operationId": "createBooking",
+        "summary": "Create an event",
+        "operationId": "createEvent",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateBookingRequest"
+                "$ref": "#/components/schemas/CreateEventRequest"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Booking created.",
+            "description": "Event created.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BookingResourceResponse"
+                  "$ref": "#/components/schemas/EventResourceResponse"
                 }
               }
             }
@@ -727,28 +723,31 @@
         }
       }
     },
-    "/bookings/{bookingId}": {
+    "/events/{eventId}": {
       "get": {
         "tags": [
-          "Bookings"
+          "Events"
         ],
-        "summary": "Get a booking",
-        "operationId": "getBooking",
+        "summary": "Get an event",
+        "operationId": "getEvent",
         "parameters": [
           {
-            "$ref": "#/components/parameters/BookingId"
+            "$ref": "#/components/parameters/EventId"
           },
           {
-            "$ref": "#/components/parameters/IncludeBookingRelations"
+            "$ref": "#/components/parameters/EventRevision"
+          },
+          {
+            "$ref": "#/components/parameters/IncludeEventRelations"
           }
         ],
         "responses": {
           "200": {
-            "description": "Booking resource.",
+            "description": "Event resource.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BookingResourceResponse"
+                  "$ref": "#/components/schemas/EventResourceResponse"
                 }
               }
             }
@@ -763,13 +762,13 @@
       },
       "put": {
         "tags": [
-          "Bookings"
+          "Events"
         ],
-        "summary": "Update a booking",
-        "operationId": "updateBooking",
+        "summary": "Update an event",
+        "operationId": "updateEvent",
         "parameters": [
           {
-            "$ref": "#/components/parameters/BookingId"
+            "$ref": "#/components/parameters/EventId"
           }
         ],
         "requestBody": {
@@ -777,18 +776,18 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateBookingRequest"
+                "$ref": "#/components/schemas/UpdateEventRequest"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Booking updated.",
+            "description": "Event updated.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BookingResourceResponse"
+                  "$ref": "#/components/schemas/EventResourceResponse"
                 }
               }
             }
@@ -809,99 +808,24 @@
       },
       "delete": {
         "tags": [
-          "Bookings"
+          "Events"
         ],
-        "summary": "Delete a booking",
-        "operationId": "deleteBooking",
+        "summary": "Delete an event",
+        "operationId": "deleteEvent",
         "parameters": [
           {
-            "$ref": "#/components/parameters/BookingId"
+            "$ref": "#/components/parameters/EventId"
           }
         ],
         "responses": {
           "204": {
-            "description": "Booking deleted."
+            "description": "Event deleted."
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
-          }
-        }
-      }
-    },
-    "/bookings/{bookingId}/lifecycle": {
-      "get": {
-        "tags": [
-          "Booking Lifecycle"
-        ],
-        "summary": "List booking lifecycle entries",
-        "operationId": "listBookingLifecycleEntries",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/BookingId"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Booking lifecycle history.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BookingLifecycleCollectionResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Booking Lifecycle"
-        ],
-        "summary": "Append a booking lifecycle entry",
-        "operationId": "createBookingLifecycleEntry",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/BookingId"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateBookingLifecycleEntryRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Lifecycle entry created and booking status updated.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BookingLifecycleEntryResourceResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
-          },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
           }
         }
       }
@@ -926,14 +850,24 @@
           "format": "uuid"
         }
       },
-      "BookingId": {
-        "name": "bookingId",
+      "EventId": {
+        "name": "eventId",
         "in": "path",
         "required": true,
-        "description": "Booking identifier.",
+        "description": "Event identifier.",
         "schema": {
           "type": "string",
           "format": "uuid"
+        }
+      },
+      "EventRevision": {
+        "name": "revision",
+        "in": "query",
+        "description": "Return the specified historical event revision. Omit this filter to return the latest revision.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "example": 2
         }
       },
       "BlockedTimeId": {
@@ -984,20 +918,20 @@
           "$ref": "#/components/schemas/CalendarType"
         }
       },
-      "BookingStatusFilter": {
+      "EventStatusFilter": {
         "name": "status",
         "in": "query",
-        "description": "Filter by booking status.",
+        "description": "Filter by event status.",
         "schema": {
-          "$ref": "#/components/schemas/BookingStatus"
+          "$ref": "#/components/schemas/EventStatus"
         }
       },
-      "BookingTypeFilter": {
+      "EventTypeFilter": {
         "name": "type",
         "in": "query",
-        "description": "Filter by booking type.",
+        "description": "Filter by event type.",
         "schema": {
-          "$ref": "#/components/schemas/BookingType"
+          "$ref": "#/components/schemas/EventType"
         }
       },
       "StartsFromFilter": {
@@ -1027,13 +961,13 @@
           "example": "working_hours,blocked_times"
         }
       },
-      "IncludeBookingRelations": {
+      "IncludeEventRelations": {
         "name": "include",
         "in": "query",
-        "description": "Comma-separated related data to embed. Supported values: assignees, sources, lifecycle.",
+        "description": "Comma-separated event-related data to embed. Supported values: assignees, sources.",
         "schema": {
           "type": "string",
-          "example": "assignees,sources,lifecycle"
+          "example": "assignees,sources"
         }
       }
     },
@@ -1059,7 +993,7 @@
         }
       },
       "Conflict": {
-        "description": "The request conflicts with the current resource state, typically due to overlapping bookings.",
+        "description": "The request conflicts with the current resource state, typically due to overlapping events.",
         "content": {
           "application/json": {
             "schema": {
@@ -1173,7 +1107,7 @@
         ],
         "example": "work"
       },
-      "BookingStatus": {
+      "EventStatus": {
         "type": "string",
         "enum": [
           "draft",
@@ -1193,7 +1127,7 @@
         ],
         "example": "approved"
       },
-      "BookingType": {
+      "EventType": {
         "type": "string",
         "enum": [
           "single",
@@ -1244,7 +1178,7 @@
       },
       "SourceReference": {
         "type": "object",
-        "description": "External or cross-system source reference linked to the booking.",
+        "description": "External or cross-system source reference linked to the event.",
         "additionalProperties": false,
         "required": [
           "kind",
@@ -1289,7 +1223,7 @@
       },
       "Location": {
         "type": "object",
-        "description": "Optional physical or virtual location attached to the booking.",
+        "description": "Optional physical or virtual location attached to the event.",
         "additionalProperties": false,
         "properties": {
           "type": {
@@ -1323,7 +1257,7 @@
       },
       "Recurrence": {
         "type": "object",
-        "description": "Recurrence rules used when the booking belongs to a repeating series.",
+        "description": "Recurrence rules used when the event belongs to a repeating series.",
         "additionalProperties": false,
         "required": [
           "frequency",
@@ -1369,44 +1303,6 @@
               "monday",
               "wednesday"
             ]
-          }
-        }
-      },
-      "BookingLifecycleEntry": {
-        "type": "object",
-        "description": "A single status transition recorded in the booking lifecycle.",
-        "additionalProperties": false,
-        "required": [
-          "status",
-          "changed_at",
-          "actor"
-        ],
-        "properties": {
-          "status": {
-            "$ref": "#/components/schemas/BookingStatus"
-          },
-          "changed_at": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Timestamp when the status transition occurred.",
-            "example": "2026-06-27T18:00:00+02:00"
-          },
-          "actor": {
-            "$ref": "#/components/schemas/UserReference"
-          },
-          "reason": {
-            "type": "string",
-            "description": "Optional explanation for the status transition.",
-            "maxLength": 500,
-            "example": "Approved after checking room capacity."
-          },
-          "metadata": {
-            "type": "object",
-            "description": "Optional machine-friendly context for the transition.",
-            "additionalProperties": true,
-            "example": {
-              "approval_channel": "admin_panel"
-            }
           }
         }
       },
@@ -1667,9 +1563,9 @@
           }
         }
       },
-      "Booking": {
+      "Event": {
         "type": "object",
-        "description": "A booking resource that represents a scheduled record on a calendar, including lifecycle state, recurrence context, ownership, and operational metadata.",
+        "description": "An event resource that represents a scheduled record on a calendar, including revision metadata, recurrence context, ownership, and operational metadata.",
         "additionalProperties": false,
         "required": [
           "id",
@@ -1682,93 +1578,98 @@
           "starts_at",
           "ends_at",
           "created_at",
-          "created_by",
-          "lifecycle"
+          "created_by"
         ],
         "properties": {
           "id": {
             "type": "string",
             "format": "uuid",
-            "description": "Primary key of the booking.",
+            "description": "Primary key of the event.",
             "example": "1b6c0d93-cfd7-4126-9cc2-b3c9394eb6d8"
           },
           "calendar_id": {
             "type": "string",
             "format": "uuid",
-            "description": "Primary key of the calendar that owns this booking.",
+            "description": "Primary key of the calendar that owns this event.",
             "example": "6c6b8f0a-6cf6-4db4-9f86-3a2f51571310"
           },
           "sources": {
             "type": "array",
-            "description": "Upstream or cross-system source references connected to this booking.",
+            "description": "Upstream or cross-system source references connected to this event.",
             "items": {
               "$ref": "#/components/schemas/SourceReference"
             },
             "default": []
           },
-          "parent_booking_id": {
+          "parent_event_id": {
             "type": "string",
             "format": "uuid",
-            "description": "Optional parent booking identifier when this record is derived from another booking.",
+            "description": "Optional parent event identifier when this record is derived from another event.",
             "example": "0ba4cfe0-6acb-4d33-8e47-a31264d43d0d"
           },
-          "series_master_booking_id": {
+          "series_master_event_id": {
             "type": "string",
             "format": "uuid",
-            "description": "Optional master-series booking identifier for recurring instances or exceptions.",
+            "description": "Optional master-series event identifier for recurring instances or exceptions.",
             "example": "314e0b0d-b0d7-4ae7-8808-d6b721ae2b3d"
           },
-          "booking_number": {
+          "event_number": {
             "type": "string",
-            "description": "Human-friendly booking reference for support, invoices, or operator workflows.",
+            "description": "Human-friendly event reference for support, invoices, or operator workflows.",
             "maxLength": 100,
             "example": "BK-2026-000245"
           },
           "title": {
             "type": "string",
-            "description": "Short human-readable title of the booking.",
+            "description": "Short human-readable title of the event.",
             "maxLength": 255,
             "example": "Quarterly planning session"
           },
           "description": {
             "type": "string",
-            "description": "Optional long-form notes or business context for the booking.",
+            "description": "Optional long-form notes or business context for the event.",
             "example": "Planning session for Q3 roadmap with engineering and product leads."
           },
           "status": {
-            "$ref": "#/components/schemas/BookingStatus"
+            "$ref": "#/components/schemas/EventStatus"
           },
-          "status_reason": {
-            "type": "string",
-            "description": "Optional human-readable explanation for the current status.",
-            "maxLength": 500,
-            "example": "Approved by the scheduling team after availability review."
+          "revision": {
+            "type": "integer",
+            "description": "Automatically assigned revision number for this version of the event. Each change creates a new revision; use it to retrieve a historical version.",
+            "minimum": 1,
+            "example": 2
           },
           "type": {
-            "$ref": "#/components/schemas/BookingType"
+            "$ref": "#/components/schemas/EventType"
           },
           "timezone": {
             "type": "string",
-            "description": "IANA timezone used to interpret the booking schedule.",
+            "description": "IANA timezone used to interpret the event schedule.",
             "example": "Europe/Berlin"
           },
           "starts_at": {
             "type": "string",
             "format": "date-time",
-            "description": "Inclusive start timestamp of the booking in ISO 8601 format.",
+            "description": "Inclusive start timestamp of the event in ISO 8601 format.",
             "example": "2026-07-03T09:00:00+02:00"
           },
           "ends_at": {
             "type": "string",
             "format": "date-time",
-            "description": "Exclusive end timestamp of the booking in ISO 8601 format.",
+            "description": "Exclusive end timestamp of the event in ISO 8601 format.",
             "example": "2026-07-03T10:30:00+02:00"
           },
           "all_day": {
             "type": "boolean",
-            "description": "Whether the booking spans the full local calendar day rather than a time range.",
+            "description": "Whether the event spans the full local calendar day rather than a time range.",
             "default": false,
             "example": false
+          },
+          "blocks_availability": {
+            "type": "boolean",
+            "description": "Whether the event prevents another availability-blocking event from overlapping its time range in the same calendar.",
+            "default": true,
+            "example": true
           },
           "duration_minutes": {
             "type": "integer",
@@ -1778,19 +1679,19 @@
           },
           "buffer_before_minutes": {
             "type": "integer",
-            "description": "Optional preparation time reserved immediately before the booking.",
+            "description": "Optional preparation time reserved immediately before the event.",
             "minimum": 0,
             "example": 15
           },
           "buffer_after_minutes": {
             "type": "integer",
-            "description": "Optional wrap-up time reserved immediately after the booking.",
+            "description": "Optional wrap-up time reserved immediately after the event.",
             "minimum": 0,
             "example": 15
           },
           "assignees": {
             "type": "array",
-            "description": "Users responsible for owning or operating the booking.",
+            "description": "Users responsible for owning or operating the event.",
             "items": {
               "$ref": "#/components/schemas/UserReference"
             }
@@ -1801,6 +1702,12 @@
           "updated_by": {
             "$ref": "#/components/schemas/UserReference"
           },
+          "updated_reason": {
+            "type": "string",
+            "description": "Optional explanation for the latest event change.",
+            "maxLength": 500,
+            "example": "Rescheduled after the customer requested a later start time."
+          },
           "location": {
             "$ref": "#/components/schemas/Location"
           },
@@ -1810,26 +1717,19 @@
           "created_at": {
             "type": "string",
             "format": "date-time",
-            "description": "Timestamp when the booking was created.",
+            "description": "Timestamp when the event was created.",
             "example": "2026-06-27T17:32:11+02:00"
           },
           "updated_at": {
             "type": "string",
             "format": "date-time",
-            "description": "Timestamp when the booking was last updated.",
+            "description": "Timestamp when the event was last updated.",
             "example": "2026-06-27T18:10:02+02:00"
-          },
-          "lifecycle": {
-            "type": "array",
-            "description": "Audit-style status transition history for the booking.",
-            "items": {
-              "$ref": "#/components/schemas/BookingLifecycleEntry"
-            }
           },
           "notes": {
             "type": "string",
             "description": "Internal operational notes that should not necessarily be displayed to end users.",
-            "example": "Room access code will be shared 15 minutes before the booking starts."
+            "example": "Room access code will be shared 15 minutes before the event starts."
           },
           "metadata": {
             "type": "object",
@@ -1843,7 +1743,7 @@
           }
         }
       },
-      "CreateBookingRequest": {
+      "CreateEventRequest": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -1865,15 +1765,15 @@
             },
             "default": []
           },
-          "parent_booking_id": {
+          "parent_event_id": {
             "type": "string",
             "format": "uuid"
           },
-          "series_master_booking_id": {
+          "series_master_event_id": {
             "type": "string",
             "format": "uuid"
           },
-          "booking_number": {
+          "event_number": {
             "type": "string",
             "maxLength": 100
           },
@@ -1885,14 +1785,10 @@
             "type": "string"
           },
           "status": {
-            "$ref": "#/components/schemas/BookingStatus"
-          },
-          "status_reason": {
-            "type": "string",
-            "maxLength": 500
+            "$ref": "#/components/schemas/EventStatus"
           },
           "type": {
-            "$ref": "#/components/schemas/BookingType"
+            "$ref": "#/components/schemas/EventType"
           },
           "timezone": {
             "type": "string",
@@ -1909,6 +1805,10 @@
           "all_day": {
             "type": "boolean",
             "default": false
+          },
+          "blocks_availability": {
+            "type": "boolean",
+            "default": true
           },
           "buffer_before_minutes": {
             "type": "integer",
@@ -1941,7 +1841,7 @@
           }
         }
       },
-      "UpdateBookingRequest": {
+      "UpdateEventRequest": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -1951,15 +1851,15 @@
               "$ref": "#/components/schemas/SourceReference"
             }
           },
-          "parent_booking_id": {
+          "parent_event_id": {
             "type": "string",
             "format": "uuid"
           },
-          "series_master_booking_id": {
+          "series_master_event_id": {
             "type": "string",
             "format": "uuid"
           },
-          "booking_number": {
+          "event_number": {
             "type": "string",
             "maxLength": 100
           },
@@ -1971,14 +1871,14 @@
             "type": "string"
           },
           "status": {
-            "$ref": "#/components/schemas/BookingStatus"
+            "$ref": "#/components/schemas/EventStatus"
           },
-          "status_reason": {
+          "updated_reason": {
             "type": "string",
             "maxLength": 500
           },
           "type": {
-            "$ref": "#/components/schemas/BookingType"
+            "$ref": "#/components/schemas/EventType"
           },
           "timezone": {
             "type": "string"
@@ -1992,6 +1892,9 @@
             "format": "date-time"
           },
           "all_day": {
+            "type": "boolean"
+          },
+          "blocks_availability": {
             "type": "boolean"
           },
           "buffer_before_minutes": {
@@ -2016,26 +1919,6 @@
           },
           "notes": {
             "type": "string"
-          },
-          "metadata": {
-            "type": "object",
-            "additionalProperties": true
-          }
-        }
-      },
-      "CreateBookingLifecycleEntryRequest": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "status"
-        ],
-        "properties": {
-          "status": {
-            "$ref": "#/components/schemas/BookingStatus"
-          },
-          "reason": {
-            "type": "string",
-            "maxLength": 500
           },
           "metadata": {
             "type": "object",
@@ -2185,7 +2068,7 @@
           }
         }
       },
-      "BookingCollectionResponse": {
+      "EventCollectionResponse": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -2196,7 +2079,7 @@
           "data": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Booking"
+              "$ref": "#/components/schemas/Event"
             }
           },
           "meta": {
@@ -2204,7 +2087,7 @@
           }
         }
       },
-      "BookingResourceResponse": {
+      "EventResourceResponse": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -2212,34 +2095,7 @@
         ],
         "properties": {
           "data": {
-            "$ref": "#/components/schemas/Booking"
-          }
-        }
-      },
-      "BookingLifecycleCollectionResponse": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "data"
-        ],
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/BookingLifecycleEntry"
-            }
-          }
-        }
-      },
-      "BookingLifecycleEntryResourceResponse": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "data"
-        ],
-        "properties": {
-          "data": {
-            "$ref": "#/components/schemas/BookingLifecycleEntry"
+            "$ref": "#/components/schemas/Event"
           }
         }
       }

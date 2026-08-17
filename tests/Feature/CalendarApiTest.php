@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\BlockedTime;
 use App\Models\Calendar;
+use App\Models\Event;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -143,12 +144,17 @@ class CalendarApiTest extends TestCase
             'ends_at' => '2026-08-10T11:00:00+02:00',
             'reason' => 'Maintenance',
         ]);
+        Event::factory()->for($calendar)->create([
+            'starts_at' => '2026-08-10T09:00:00Z',
+            'ends_at' => '2026-08-10T10:00:00Z',
+        ]);
 
         $this->getJson("/api/calendars/{$calendar->id}/availability?starts_at=2026-08-10T09:00:00%2B02:00&ends_at=2026-08-10T12:00:00%2B02:00&duration_minutes=60&slot_interval_minutes=60")
             ->assertOk()
             ->assertJsonPath('meta.calendar_id', $calendar->id)
-            ->assertJsonCount(2, 'data')
-            ->assertJsonMissing(['starts_at' => '2026-08-10T10:00:00+02:00']);
+            ->assertJsonCount(1, 'data')
+            ->assertJsonMissing(['starts_at' => '2026-08-10T10:00:00+02:00'])
+            ->assertJsonMissing(['starts_at' => '2026-08-10T11:00:00+02:00']);
 
         $this->postJson('/api/calendars', [
             ...$this->calendarPayload(),

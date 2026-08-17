@@ -1,6 +1,6 @@
 {
-  "title": "Booking",
-  "description": "A booking resource that represents a scheduled record on a calendar, including lifecycle state, recurrence context, ownership, and operational metadata.",
+  "title": "Event",
+  "description": "An event resource that represents a scheduled record on a calendar, including revision metadata, recurrence context, ownership, and operational metadata.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -14,25 +14,24 @@
     "starts_at",
     "ends_at",
     "created_at",
-    "created_by",
-    "lifecycle"
+    "created_by"
   ],
   "properties": {
     "id": {
       "type": "string",
       "format": "uuid",
-      "description": "Primary key of the booking.",
+      "description": "Primary key of the event.",
       "example": "1b6c0d93-cfd7-4126-9cc2-b3c9394eb6d8"
     },
     "calendar_id": {
       "type": "string",
       "format": "uuid",
-      "description": "Primary key of the calendar that owns this booking.",
+      "description": "Primary key of the calendar that owns this event.",
       "example": "6c6b8f0a-6cf6-4db4-9f86-3a2f51571310"
     },
     "sources": {
       "type": "array",
-      "description": "Upstream or cross-system source references connected to this booking, such as synced provider events or imported records.",
+      "description": "Upstream or cross-system source references connected to this event, such as synced provider events or imported records.",
       "items": {
         "$ref": "#/$defs/source_reference"
       },
@@ -51,38 +50,38 @@
         }
       ]
     },
-    "parent_booking_id": {
+    "parent_event_id": {
       "type": "string",
       "format": "uuid",
-      "description": "Optional parent booking identifier when this record is derived from another booking.",
+      "description": "Optional parent event identifier when this record is derived from another event.",
       "example": "0ba4cfe0-6acb-4d33-8e47-a31264d43d0d"
     },
-    "series_master_booking_id": {
+    "series_master_event_id": {
       "type": "string",
       "format": "uuid",
-      "description": "Optional master-series booking identifier for recurring instances or exceptions.",
+      "description": "Optional master-series event identifier for recurring instances or exceptions.",
       "example": "314e0b0d-b0d7-4ae7-8808-d6b721ae2b3d"
     },
-    "booking_number": {
+    "event_number": {
       "type": "string",
-      "description": "Human-friendly booking reference for support, invoices, or operator workflows.",
+      "description": "Human-friendly event reference for support, invoices, or operator workflows.",
       "example": "BK-2026-000245",
       "maxLength": 100
     },
     "title": {
       "type": "string",
-      "description": "Short human-readable title of the booking.",
+      "description": "Short human-readable title of the event.",
       "example": "Quarterly planning session",
       "maxLength": 255
     },
     "description": {
       "type": "string",
-      "description": "Optional long-form notes or business context for the booking.",
+      "description": "Optional long-form notes or business context for the event.",
       "example": "Planning session for Q3 roadmap with engineering and product leads."
     },
     "status": {
       "type": "string",
-      "description": "Lifecycle status of the booking.",
+      "description": "Lifecycle status of the event.",
       "enum": [
         "draft",
         "pending",
@@ -101,15 +100,15 @@
       ],
       "example": "approved"
     },
-    "status_reason": {
-      "type": "string",
-      "description": "Optional human-readable explanation for the current status.",
-      "example": "Approved by the scheduling team after availability review.",
-      "maxLength": 500
+    "revision": {
+      "type": "integer",
+      "description": "Automatically assigned revision number for this version of the event. Each change creates a new revision; use it to retrieve a historical version.",
+      "minimum": 1,
+      "example": 2
     },
     "type": {
       "type": "string",
-      "description": "Structural classification of the booking record.",
+      "description": "Structural classification of the event record.",
       "enum": [
         "single",
         "recurring_master",
@@ -123,26 +122,32 @@
     },
     "timezone": {
       "type": "string",
-      "description": "IANA timezone used to interpret the booking schedule.",
+      "description": "IANA timezone used to interpret the event schedule.",
       "example": "Europe/Berlin"
     },
     "starts_at": {
       "type": "string",
       "format": "date-time",
-      "description": "Inclusive start timestamp of the booking in ISO 8601 format.",
+      "description": "Inclusive start timestamp of the event in ISO 8601 format.",
       "example": "2026-07-03T09:00:00+02:00"
     },
     "ends_at": {
       "type": "string",
       "format": "date-time",
-      "description": "Exclusive end timestamp of the booking in ISO 8601 format.",
+      "description": "Exclusive end timestamp of the event in ISO 8601 format.",
       "example": "2026-07-03T10:30:00+02:00"
     },
     "all_day": {
       "type": "boolean",
-      "description": "Whether the booking spans the full local calendar day rather than a time range.",
+      "description": "Whether the event spans the full local calendar day rather than a time range.",
       "default": false,
       "example": false
+    },
+    "blocks_availability": {
+      "type": "boolean",
+      "description": "Whether this event prevents another availability-blocking event from overlapping its time range in the same calendar.",
+      "default": true,
+      "example": true
     },
     "duration_minutes": {
       "type": "integer",
@@ -152,19 +157,19 @@
     },
     "buffer_before_minutes": {
       "type": "integer",
-      "description": "Optional preparation time reserved immediately before the booking.",
+      "description": "Optional preparation time reserved immediately before the event.",
       "minimum": 0,
       "example": 15
     },
     "buffer_after_minutes": {
       "type": "integer",
-      "description": "Optional wrap-up time reserved immediately after the booking.",
+      "description": "Optional wrap-up time reserved immediately after the event.",
       "minimum": 0,
       "example": 15
     },
     "assignees": {
       "type": "array",
-      "description": "Users responsible for owning or operating the booking.",
+      "description": "Users responsible for owning or operating the event.",
       "items": {
         "$ref": "#/$defs/user_reference"
       },
@@ -181,6 +186,12 @@
     "updated_by": {
       "$ref": "#/$defs/user_reference"
     },
+    "updated_reason": {
+      "type": "string",
+      "description": "Optional explanation for the latest event change.",
+      "example": "Rescheduled after the customer requested a later start time.",
+      "maxLength": 500
+    },
     "location": {
       "$ref": "#/$defs/location"
     },
@@ -190,46 +201,19 @@
     "created_at": {
       "type": "string",
       "format": "date-time",
-      "description": "Timestamp when the booking was created.",
+      "description": "Timestamp when the event was created.",
       "example": "2026-06-27T17:32:11+02:00"
     },
     "updated_at": {
       "type": "string",
       "format": "date-time",
-      "description": "Timestamp when the booking was last updated.",
+      "description": "Timestamp when the event was last updated.",
       "example": "2026-06-27T18:10:02+02:00"
-    },
-    "lifecycle": {
-      "type": "array",
-      "description": "Audit-style status transition history for the booking. The current top-level status should match the latest lifecycle entry.",
-      "items": {
-        "$ref": "#/$defs/lifecycle_entry"
-      },
-      "example": [
-        {
-          "status": "pending",
-          "changed_at": "2026-06-27T17:32:11+02:00",
-          "actor": {
-            "kind": "user",
-            "id": "d2f5cd63-f5e9-4d57-b733-37ea6ce0d6c6"
-          },
-          "reason": "Booking created by customer request."
-        },
-        {
-          "status": "approved",
-          "changed_at": "2026-06-27T18:00:00+02:00",
-          "actor": {
-            "kind": "user",
-            "id": "6c38d95c-6784-4f83-8b36-1632877d4ff1"
-          },
-          "reason": "Approved after checking room capacity."
-        }
-      ]
     },
     "notes": {
       "type": "string",
       "description": "Internal operational notes that should not necessarily be displayed to end users.",
-      "example": "Room access code will be shared 15 minutes before the booking starts."
+      "example": "Room access code will be shared 15 minutes before the event starts."
     },
     "metadata": {
       "type": "object",
@@ -268,7 +252,7 @@
     },
     "source_reference": {
       "type": "object",
-      "description": "External or cross-system source reference linked to the booking.",
+      "description": "External or cross-system source reference linked to the event.",
       "additionalProperties": false,
       "required": [
         "kind",
@@ -311,65 +295,9 @@
         }
       }
     },
-    "lifecycle_entry": {
-      "type": "object",
-      "description": "A single status transition recorded in the booking lifecycle.",
-      "additionalProperties": false,
-      "required": [
-        "status",
-        "changed_at",
-        "actor"
-      ],
-      "properties": {
-        "status": {
-          "type": "string",
-          "description": "Status assigned at this lifecycle transition.",
-          "enum": [
-            "draft",
-            "pending",
-            "tentative",
-            "approved",
-            "confirmed",
-            "processing",
-            "processed",
-            "completed",
-            "cancelled",
-            "rejected",
-            "no_show",
-            "expired",
-            "deleted",
-            "archived"
-          ],
-          "example": "approved"
-        },
-        "changed_at": {
-          "type": "string",
-          "format": "date-time",
-          "description": "Timestamp when the status transition occurred.",
-          "example": "2026-06-27T18:00:00+02:00"
-        },
-        "actor": {
-          "$ref": "#/$defs/user_reference"
-        },
-        "reason": {
-          "type": "string",
-          "description": "Optional explanation for the status transition.",
-          "example": "Approved after checking room capacity.",
-          "maxLength": 500
-        },
-        "metadata": {
-          "type": "object",
-          "description": "Optional machine-friendly context for the transition.",
-          "additionalProperties": true,
-          "example": {
-            "approval_channel": "admin_panel"
-          }
-        }
-      }
-    },
     "location": {
       "type": "object",
-      "description": "Optional physical or virtual location attached to the booking.",
+      "description": "Optional physical or virtual location attached to the event.",
       "additionalProperties": false,
       "properties": {
         "type": {
@@ -403,7 +331,7 @@
     },
     "recurrence": {
       "type": "object",
-      "description": "Recurrence rules used when the booking belongs to a repeating series.",
+      "description": "Recurrence rules used when the event belongs to a repeating series.",
       "additionalProperties": false,
       "required": [
         "frequency",

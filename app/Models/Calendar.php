@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $type
  * @property string $timezone
  * @property-read Collection<int, BlockedTime> $blockedTimes
+ * @property-read Collection<int, Event> $events
  * @property-read Collection<int, WorkingHour> $workingHours
  */
 #[Fillable(['name', 'owner_id', 'type', 'timezone'])]
@@ -39,5 +40,13 @@ class Calendar extends Model
     public function blockedTimes(): HasMany
     {
         return $this->hasMany(BlockedTime::class);
+    }
+
+    /**
+     * @return HasMany<Event, $this>
+     */
+    public function events(): HasMany
+    {
+        return $this->hasMany(Event::class);
     }
 }
