@@ -1,0 +1,91 @@
+name: Continuous Integration
+
+on:
+    push:
+    pull_request:
+
+permissions:
+    contents: read
+
+jobs:
+    lint:
+        name: Lint
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.4'
+                  extensions: pgsql
+                  tools: composer:v2
+                  coverage: none
+
+            - name: Install Composer dependencies
+              run: composer install --no-interaction --no-progress --prefer-dist
+
+            - name: Run Pint
+              run: composer lint
+
+    analyse:
+        name: Analyse
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.4'
+                  extensions: pgsql
+                  tools: composer:v2
+                  coverage: none
+
+            - name: Install Composer dependencies
+              run: composer install --no-interaction --no-progress --prefer-dist
+
+            - name: Run PHPStan
+              run: composer analyse
+
+    test:
+        name: Test
+        runs-on: ubuntu-latest
+        services:
+            pgsql:
+                image: postgres:18-alpine
+                env:
+                    POSTGRES_DB: testing
+                    POSTGRES_USER: root
+                    POSTGRES_PASSWORD: secret
+                options: >-
+                    --health-cmd "pg_isready -U root -d testing"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+
+        env:
+            APP_ENV: testing
+            APP_KEY: base64:OYuJQHkMBziPWt6w1o0w0B9dj2QZ6WwYkO3VgkZgV6g=
+            DB_CONNECTION: pgsql
+            DB_HOST: pgsql
+            DB_PORT: 5432
+            DB_DATABASE: testing
+            DB_USERNAME: root
+            DB_PASSWORD: secret
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.4'
+                  extensions: pgsql
+                  tools: composer:v2
+                  coverage: none
+
+            - name: Install Composer dependencies
+              run: composer install --no-interaction --no-progress --prefer-dist
+
+            - name: Run tests
+              run: php artisan test --compact
