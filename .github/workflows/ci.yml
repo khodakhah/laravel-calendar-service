@@ -58,6 +58,8 @@ jobs:
                     POSTGRES_DB: testing
                     POSTGRES_USER: root
                     POSTGRES_PASSWORD: secret
+                ports:
+                    - 5432:5432
                 options: >-
                     --health-cmd "pg_isready -U root -d testing"
                     --health-interval 10s
@@ -68,7 +70,7 @@ jobs:
             APP_ENV: testing
             APP_KEY: base64:OYuJQHkMBziPWt6w1o0w0B9dj2QZ6WwYkO3VgkZgV6g=
             DB_CONNECTION: pgsql
-            DB_HOST: pgsql
+            DB_HOST: 127.0.0.1
             DB_PORT: 5432
             DB_DATABASE: testing
             DB_USERNAME: root
