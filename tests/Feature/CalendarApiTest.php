@@ -2,15 +2,29 @@
 
 namespace Tests\Feature;
 
+use App\Models\ApiKey;
 use App\Models\BlockedTime;
 use App\Models\Calendar;
 use App\Models\Event;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class CalendarApiTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $apiKey = ApiKey::create([
+            'name' => 'Calendar API test',
+            'token_hash' => Hash::make($secret = str_repeat('a', 43)),
+        ]);
+
+        $this->withToken("lcs_{$apiKey->id}.{$secret}");
+    }
 
     public function test_calendar_crud_and_filters_follow_the_api_contract(): void
     {

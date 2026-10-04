@@ -2,15 +2,29 @@
 
 namespace Tests\Feature;
 
+use App\Models\ApiKey;
 use App\Models\Calendar;
 use App\Models\Event;
 use App\Models\EventChangeLog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class EventApiTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $apiKey = ApiKey::create([
+            'name' => 'Event API test',
+            'token_hash' => Hash::make($secret = str_repeat('a', 43)),
+        ]);
+
+        $this->withToken("lcs_{$apiKey->id}.{$secret}");
+    }
 
     public function test_event_updates_and_deletion_archive_the_previous_latest_revision(): void
     {

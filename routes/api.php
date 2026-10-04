@@ -13,11 +13,13 @@ Route::get('/health', function (): JsonResponse {
     ]);
 })->name('api.health');
 
-Route::apiResource('calendars', CalendarController::class);
-Route::apiResource('events', EventController::class);
+Route::middleware(['api-key', 'throttle:api'])->group(function (): void {
+    Route::apiResource('calendars', CalendarController::class);
+    Route::apiResource('events', EventController::class);
 
-Route::prefix('calendars/{calendar}')->scopeBindings()->group(function (): void {
-    Route::get('availability', CalendarAvailabilityController::class);
-    Route::apiResource('blocked-times', CalendarBlockedTimeController::class)
-        ->parameters(['blocked-times' => 'blockedTime']);
+    Route::prefix('calendars/{calendar}')->scopeBindings()->group(function (): void {
+        Route::get('availability', CalendarAvailabilityController::class);
+        Route::apiResource('blocked-times', CalendarBlockedTimeController::class)
+            ->parameters(['blocked-times' => 'blockedTime']);
+    });
 });

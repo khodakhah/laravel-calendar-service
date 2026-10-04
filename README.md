@@ -42,6 +42,53 @@ Run the test suite with the Docker PostgreSQL `testing` database:
 composer test
 ```
 
+## API authentication
+
+All calendar, event, availability, and blocked-time endpoints require an API key.
+`GET /api/health` is the only public API endpoint.
+
+Apply the database migration and create a service credential:
+
+```bash
+php artisan migrate
+php artisan api-key:create "production integration" \
+  --expires-at="2027-01-01T00:00:00Z"
+```
+
+The command prints the API key exactly once, in this format:
+
+```text
+lcs_<key-id>.<secret>
+```
+
+Store the complete value in a secrets manager. The service stores only a one-way
+hash of the secret, so a lost key cannot be retrieved. Do not commit keys to source
+control, include them in client-side applications, or write them to logs.
+
+Send the key on each protected request in the `Authorization` header:
+
+```bash
+curl https://calendar.example.test/api/calendars \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer lcs_<key-id>.<secret>"
+```
+
+Invalid, expired, or revoked keys receive `401 Unauthenticated`. Protected requests
+are rate-limited to 60 requests per minute per API key. API keys currently grant
+service-wide access; they do not scope access to a calendar or user.
+
+### Rotating and revoking keys
+
+Create a replacement key, update every integration to use it, and then revoke the
+previous key by its `<key-id>`:
+
+```bash
+php artisan api-key:revoke <key-id>
+```
+
+Revocation takes effect immediately. Use an expiration date for time-limited
+integrations and rotate keys before they expire.
+
 ## Testing
 
 Tests are organized by the scope and dependencies they exercise. Put each test in the

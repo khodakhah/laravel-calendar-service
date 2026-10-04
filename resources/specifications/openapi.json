@@ -3,7 +3,7 @@
   "info": {
     "title": "Laravel Calendar Service API",
     "version": "0.1.0",
-    "description": "RESTful API specification for managing calendars, working hours, blocked times, availability, and events."
+    "description": "RESTful API specification for managing calendars, working hours, blocked times, availability, and events. Protected endpoints require a service API key."
   },
   "servers": [
     {
@@ -836,7 +836,8 @@
       "bearerAuth": {
         "type": "http",
         "scheme": "bearer",
-        "bearerFormat": "JWT"
+        "bearerFormat": "lcs_<key-id>.<secret>",
+        "description": "Service API key created with `php artisan api-key:create`. Send it as `Authorization: Bearer lcs_<key-id>.<secret>`. In an OpenAPI authorization dialog, enter only `lcs_<key-id>.<secret>`; the bearer scheme adds the `Bearer` prefix. Invalid, expired, and revoked keys return `401 Unauthenticated`."
       }
     },
     "parameters": {
